@@ -19,21 +19,25 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 3000);
-    checkAuth();
+    const authenticate = async () => {
+      await checkAuth(); // Wait for auth check
+      setTimeout(() => setLoading(false), 3000); // Ensure splash screen shows for 3 seconds
+    };
+
+    authenticate();
   }, []);
 
   const checkAuth = async () => {
     try {
       console.log("Checking AsyncStorage...");
       const token = await AsyncStorage.getItem("token");
-      console.log("1")
-      if (!token || token === "null") {  // Null check added
+
+      if (!token || token === "null") {
         console.log("No valid token found.");
         setIsLoggedIn(false);
         return;
       }
-  
+
       console.log("Retrieved Token:", token);
       const res = await fetch("https://to-do-backend-zeta.vercel.app/user/check", {
         method: "GET",
@@ -42,25 +46,20 @@ const App = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (res.ok) {
         console.log("Token is valid.");
         setIsLoggedIn(true);
       } else {
         console.log("Invalid token, logging out...");
         setIsLoggedIn(false);
-        await AsyncStorage.removeItem("token"); // Clear invalid token
+        await AsyncStorage.removeItem("token");
       }
     } catch (error) {
       console.error("Error in checkAuth:", error);
       setIsLoggedIn(false);
-    } finally {
-      setLoading(false);
     }
   };
-  
-
-
 
   if (loading) {
     return <Splash />;
